@@ -1,4 +1,7 @@
+{-# LANGUAGE CPP #-}
+#ifndef DISABLE_TH
 {-# LANGUAGE TemplateHaskell #-}
+#endif
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | 'Typeable' instances for signed and unsigned integer types. The reason for
@@ -23,7 +26,9 @@ import Data.Word
 import Language.Syntactic
 
 import Data.TypeRep.Representation
+#ifndef DISABLE_TH
 import Data.TypeRep.TH
+#endif
 import Data.TypeRep.Types.IntWord
 
 
@@ -37,6 +42,7 @@ instance (IntWordType :<: t) => Typeable t Word16 where typeRep' = word16Type
 instance (IntWordType :<: t) => Typeable t Word32 where typeRep' = word32Type
 instance (IntWordType :<: t) => Typeable t Word64 where typeRep' = word64Type
 
+#ifndef DISABLE_TH
 deriveWitnessTypeable  ''IntWordType
 derivePWitnessTypeable ''IntWordType
-
+#endif

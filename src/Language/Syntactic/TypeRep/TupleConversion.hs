@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | Construction and elimination of tuples
 --
 -- Something similar can be achieved using the 'Syntactic' instances from

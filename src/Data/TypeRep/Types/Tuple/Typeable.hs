@@ -1,4 +1,7 @@
+{-# LANGUAGE CPP #-}
+#ifndef DISABLE_TH
 {-# LANGUAGE TemplateHaskell #-}
+#endif
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | 'Typeable' instances for tuple types. The reason for having these in a
@@ -20,7 +23,9 @@ module Data.TypeRep.Types.Tuple.Typeable where
 import Language.Syntactic
 
 import Data.TypeRep.Representation
+#ifndef DISABLE_TH
 import Data.TypeRep.TH
+#endif
 import Data.TypeRep.Types.Tuple
 
 
@@ -81,6 +86,7 @@ instance (TupleType :<: t, Typeable t a, Typeable t b, Typeable t c, Typeable t 
     Typeable t (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)
   where typeRep' = sugarSym Tup15_t typeRep' typeRep' typeRep' typeRep' typeRep' typeRep' typeRep' typeRep' typeRep' typeRep' typeRep' typeRep' typeRep' typeRep' typeRep'
 
+#ifndef DISABLE_TH
 deriveWitnessTypeable ''TupleType
 derivePWitnessTypeable ''TupleType
-
+#endif

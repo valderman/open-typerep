@@ -1,5 +1,7 @@
 {-# LANGUAGE CPP #-}
+#ifndef DISABLE_TH
 {-# LANGUAGE TemplateHaskell #-}
+#endif
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Representations for tuple types
@@ -21,8 +23,9 @@ import Data.Orphans ()
 import Language.Syntactic
 
 import Data.TypeRep.Representation
+#ifndef DISABLE_TH
 import Data.TypeRep.TH
-
+#endif
 
 
 data TupleType a
@@ -143,6 +146,7 @@ instance Render TupleType
     renderSym tup   = "(" ++ replicate (tupWidth tup - 1) ',' ++ ")"
     renderArgs as _ = "(" ++ intercalate "," as ++ ")"
 
+#ifndef DISABLE_TH
 deriveTypeEq ''TupleType
 
 deriveWitnessAny ''TupleType
@@ -160,6 +164,7 @@ derivePWitness ''Typeable.Typeable ''TupleType
 derivePWitness ''Eq   ''TupleType
 derivePWitness ''Ord  ''TupleType
 derivePWitness ''Show ''TupleType
+#endif
 
 instance PWitness Num TupleType t
 instance PWitness Integral TupleType t

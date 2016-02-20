@@ -1,4 +1,7 @@
+{-# LANGUAGE CPP #-}
+#ifndef DISABLE_TH
 {-# LANGUAGE TemplateHaskell #-}
+#endif
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | 'Typeable' instances for various types. The reason for having these in a
@@ -20,7 +23,9 @@ module Data.TypeRep.Types.Basic.Typeable where
 import Language.Syntactic
 
 import Data.TypeRep.Representation
+#ifndef DISABLE_TH
 import Data.TypeRep.TH
+#endif
 import Data.TypeRep.Types.Basic
 
 
@@ -34,6 +39,7 @@ instance (DoubleType :<: t) => Typeable t Double where typeRep' = doubleType
 instance (ListType :<: t, Typeable t a)               => Typeable t [a]      where typeRep' = listType typeRep'
 instance (FunType  :<: t, Typeable t a, Typeable t b) => Typeable t (a -> b) where typeRep' = funType typeRep' typeRep'
 
+#ifndef DISABLE_TH
 deriveWitnessTypeable ''BoolType
 deriveWitnessTypeable ''CharType
 deriveWitnessTypeable ''IntType
@@ -49,4 +55,4 @@ derivePWitnessTypeable ''FloatType
 derivePWitnessTypeable ''DoubleType
 derivePWitnessTypeable ''ListType
 derivePWitnessTypeable ''FunType
-
+#endif

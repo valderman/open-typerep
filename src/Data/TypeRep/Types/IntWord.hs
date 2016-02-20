@@ -1,4 +1,7 @@
+{-# LANGUAGE CPP #-}
+#ifndef DISABLE_TH
 {-# LANGUAGE TemplateHaskell #-}
+#endif
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Representations for signed and unsigned integer types
@@ -16,7 +19,9 @@ import Data.Word
 
 import Language.Syntactic
 
+#ifndef DISABLE_TH
 import Data.TypeRep.TH
+#endif
 
 
 
@@ -55,6 +60,7 @@ word32Type = sugarSym Word32_t
 word64Type :: (Syntactic a, IntWordType :<: Domain a, Internal a ~ Word64) => a
 word64Type = sugarSym Word64_t
 
+#ifndef DISABLE_TH
 deriveRender_forType ''IntWordType
 deriveTypeEq         ''IntWordType
 deriveWitnessAny     ''IntWordType
@@ -73,4 +79,4 @@ derivePWitness ''Ord      ''IntWordType
 derivePWitness ''Show     ''IntWordType
 derivePWitness ''Num      ''IntWordType
 derivePWitness ''Integral ''IntWordType
-
+#endif

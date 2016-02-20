@@ -47,12 +47,26 @@ source-repository head
   type:     git
   location: https://github.com/emilaxelsson/open-typerep
 
+flag th
+  description: Build with Template Haskell support. Disabling this removes
+               the modules Data.TypeRep.TH and
+               Language.Syntactic.TypeRep.{Sugar.TupleTR,TupleConversion}
+               optional.
+  default:     True
+
 library
   hs-source-dirs: src
 
+  if flag(th) && !impl(haste)
+    exposed-modules:
+      Data.TypeRep.TH
+      Language.Syntactic.TypeRep.Sugar.TupleTR
+      Language.Syntactic.TypeRep.TupleConversion
+  else
+    cpp-options: -DDISABLE_TH
+  
   exposed-modules:
     Data.TypeRep.Representation
-    Data.TypeRep.TH
     Data.TypeRep.Types.Basic
     Data.TypeRep.Types.Basic.Typeable
     Data.TypeRep.Types.Tuple
@@ -63,8 +77,6 @@ library
     Data.TypeRep
     Language.Syntactic.TypeRep
     Language.Syntactic.TypeRep.Sugar.BindingTR
-    Language.Syntactic.TypeRep.Sugar.TupleTR
-    Language.Syntactic.TypeRep.TupleConversion
 
   other-modules:
     Data.TypeRep.Sub

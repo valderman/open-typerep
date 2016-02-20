@@ -1,4 +1,7 @@
+{-# LANGUAGE CPP #-}
+#ifndef DISABLE_TH
 {-# LANGUAGE TemplateHaskell #-}
+#endif
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Representations for specific types
@@ -15,8 +18,9 @@ import qualified Data.Typeable as Typeable
 import Language.Syntactic
 
 import Data.TypeRep.Representation
+#ifndef DISABLE_TH
 import Data.TypeRep.TH
-
+#endif
 
 
 data BoolType   a where Bool_t   :: BoolType   (Full Bool)
@@ -71,12 +75,6 @@ funType
     => a -> b -> fun
 funType = sugarSym Fun_t
 
-deriveRender_forType ''BoolType
-deriveRender_forType ''CharType
-deriveRender_forType ''IntType
-deriveRender_forType ''FloatType
-deriveRender_forType ''DoubleType
-
 instance Render ListType
   where
     renderSym List_t = "[]"
@@ -86,6 +84,13 @@ instance Render FunType
   where
     renderSym Fun_t = "(->)"
     renderArgs = renderArgsSmart
+
+#ifndef DISABLE_TH
+deriveRender_forType ''BoolType
+deriveRender_forType ''CharType
+deriveRender_forType ''IntType
+deriveRender_forType ''FloatType
+deriveRender_forType ''DoubleType
 
 deriveTypeEq ''BoolType
 deriveTypeEq ''CharType
@@ -181,8 +186,6 @@ deriveWitness ''Integral ''IntType
 
 derivePWitness ''Integral ''IntType
 
-
-
 -- 'PWitness' instances for non-members
 
 instance PWitness Eq FunType t
@@ -203,3 +206,4 @@ instance PWitness Integral DoubleType t
 instance PWitness Integral ListType   t
 instance PWitness Integral FunType    t
 
+#endif
