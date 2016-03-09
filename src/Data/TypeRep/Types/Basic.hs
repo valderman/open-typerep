@@ -1,7 +1,4 @@
 {-# LANGUAGE CPP #-}
-#ifndef DISABLE_TH
-{-# LANGUAGE TemplateHaskell #-}
-#endif
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Representations for specific types
@@ -16,11 +13,9 @@ module Data.TypeRep.Types.Basic where
 import qualified Data.Typeable as Typeable
 
 import Language.Syntactic
+import Data.Constraint
 
 import Data.TypeRep.Representation
-#ifndef DISABLE_TH
-import Data.TypeRep.TH
-#endif
 
 
 data BoolType   a where Bool_t   :: BoolType   (Full Bool)
@@ -85,106 +80,244 @@ instance Render FunType
     renderSym Fun_t = "(->)"
     renderArgs = renderArgsSmart
 
-#ifndef DISABLE_TH
-deriveRender_forType ''BoolType
-deriveRender_forType ''CharType
-deriveRender_forType ''IntType
-deriveRender_forType ''FloatType
-deriveRender_forType ''DoubleType
+instance Render BoolType where
+  renderSym Bool_t = "Bool"
+instance Render CharType where
+  renderSym Char_t = "Char"
+instance Render IntType where
+  renderSym Int_t = "Int"
+instance Render FloatType where
+  renderSym Float_t = "Float"
+instance Render DoubleType where
+  renderSym Double_t = "Double"
 
-deriveTypeEq ''BoolType
-deriveTypeEq ''CharType
-deriveTypeEq ''IntType
-deriveTypeEq ''FloatType
-deriveTypeEq ''DoubleType
-deriveTypeEq ''ListType
-deriveTypeEq ''FunType
+instance TypeEq BoolType t where
+  typeEqSym (Bool_t, Nil) (Bool_t, Nil)
+    = do { return Data.Constraint.Dict }
+instance TypeEq CharType t where
+  typeEqSym (Char_t, Nil) (Char_t, Nil)
+    = do { return Data.Constraint.Dict }
+instance TypeEq IntType t where
+  typeEqSym (Int_t, Nil) (Int_t, Nil)
+    = do { return Data.Constraint.Dict }
+instance TypeEq FloatType t where
+  typeEqSym (Float_t, Nil) (Float_t, Nil)
+    = do { return Data.Constraint.Dict }
+instance TypeEq DoubleType t where
+  typeEqSym (Double_t, Nil) (Double_t, Nil)
+    = do { return Data.Constraint.Dict }
+instance TypeEq t t => TypeEq ListType t where
+  typeEqSym (List_t, (a :* Nil)) (List_t, (b :* Nil))
+    = do { Data.Constraint.Dict <- typeEqM (TypeRep a) (TypeRep b);
+           return Data.Constraint.Dict }
+instance TypeEq t t => TypeEq FunType t where
+  typeEqSym (Fun_t, (a :* (b :* Nil))) (Fun_t, (c :* (d :* Nil)))
+    = do { Data.Constraint.Dict <- typeEqM (TypeRep a) (TypeRep c);
+           Data.Constraint.Dict <- typeEqM (TypeRep b) (TypeRep d);
+           return Data.Constraint.Dict }
 
-deriveWitnessAny ''BoolType
-deriveWitnessAny ''CharType
-deriveWitnessAny ''IntType
-deriveWitnessAny ''FloatType
-deriveWitnessAny ''DoubleType
-deriveWitnessAny ''ListType
-deriveWitnessAny ''FunType
+instance Witness Any BoolType t where
+  witSym _ _ = Data.Constraint.Dict
+instance Witness Any CharType t where
+  witSym _ _ = Data.Constraint.Dict
+instance Witness Any IntType t where
+  witSym _ _ = Data.Constraint.Dict
+instance Witness Any FloatType t where
+  witSym _ _ = Data.Constraint.Dict
+instance Witness Any DoubleType t where
+  witSym _ _ = Data.Constraint.Dict
+instance Witness Any ListType t where
+  witSym _ _ = Data.Constraint.Dict
+instance Witness Any FunType t where
+  witSym _ _ = Data.Constraint.Dict
 
-derivePWitnessAny ''BoolType
-derivePWitnessAny ''CharType
-derivePWitnessAny ''IntType
-derivePWitnessAny ''FloatType
-derivePWitnessAny ''DoubleType
-derivePWitnessAny ''ListType
-derivePWitnessAny ''FunType
+instance PWitness Any BoolType t where
+  pwitSym _ _ = return Data.Constraint.Dict
+instance PWitness Any CharType t where
+  pwitSym _ _ = return Data.Constraint.Dict
+instance PWitness Any IntType t where
+  pwitSym _ _ = return Data.Constraint.Dict
+instance PWitness Any FloatType t where
+  pwitSym _ _ = return Data.Constraint.Dict
+instance PWitness Any DoubleType t where
+  pwitSym _ _ = return Data.Constraint.Dict
+instance PWitness Any ListType t where
+  pwitSym _ _ = return Data.Constraint.Dict
+instance PWitness Any FunType t where
+  pwitSym _ _ = return Data.Constraint.Dict
 
-deriveWitness ''Typeable.Typeable ''BoolType
-deriveWitness ''Typeable.Typeable ''CharType
-deriveWitness ''Typeable.Typeable ''IntType
-deriveWitness ''Typeable.Typeable ''FloatType
-deriveWitness ''Typeable.Typeable ''DoubleType
-deriveWitness ''Typeable.Typeable ''ListType
-deriveWitness ''Typeable.Typeable ''FunType
+instance Witness Typeable.Typeable BoolType t where
+  witSym Bool_t Nil = Data.Constraint.Dict
+instance Witness Typeable.Typeable CharType t where
+  witSym Char_t Nil = Data.Constraint.Dict
+instance Witness Typeable.Typeable IntType t where
+  witSym Int_t Nil = Data.Constraint.Dict
+instance Witness Typeable.Typeable FloatType t where
+  witSym Float_t Nil = Data.Constraint.Dict
+instance Witness Typeable.Typeable DoubleType t where
+  witSym Double_t Nil = Data.Constraint.Dict
+instance Witness Typeable.Typeable t t =>
+         Witness Typeable.Typeable ListType t where
+  witSym List_t (a :* Nil)
+    = case
+          wit
+            (Typeable.Proxy :: Typeable.Proxy Typeable.Typeable) (TypeRep a)
+      of {
+        Data.Constraint.Dict -> Data.Constraint.Dict }
+instance Witness Typeable.Typeable t t =>
+         Witness Typeable.Typeable FunType t where
+  witSym Fun_t (a :* (b :* Nil))
+    = case
+          wit
+            (Typeable.Proxy :: Typeable.Proxy Typeable.Typeable) (TypeRep a)
+      of {
+        Data.Constraint.Dict
+          -> case
+                 wit
+                   (Typeable.Proxy :: Typeable.Proxy Typeable.Typeable) (TypeRep b)
+             of {
+               Data.Constraint.Dict -> Data.Constraint.Dict } }
 
-derivePWitness ''Typeable.Typeable ''BoolType
-derivePWitness ''Typeable.Typeable ''CharType
-derivePWitness ''Typeable.Typeable ''IntType
-derivePWitness ''Typeable.Typeable ''FloatType
-derivePWitness ''Typeable.Typeable ''DoubleType
-derivePWitness ''Typeable.Typeable ''ListType
-derivePWitness ''Typeable.Typeable ''FunType
+instance PWitness Typeable.Typeable BoolType t where
+  pwitSym Bool_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Typeable.Typeable CharType t where
+  pwitSym Char_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Typeable.Typeable IntType t where
+  pwitSym Int_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Typeable.Typeable FloatType t where
+  pwitSym Float_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Typeable.Typeable DoubleType t where
+  pwitSym Double_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Typeable.Typeable t t =>
+         PWitness Typeable.Typeable ListType t where
+  pwitSym List_t (a :* Nil)
+    = do { Data.Constraint.Dict <- pwit
+                                     (Typeable.Proxy :: Typeable.Proxy Typeable.Typeable)
+                                     (TypeRep a);
+           return Data.Constraint.Dict }
+instance PWitness Typeable.Typeable t t =>
+         PWitness Typeable.Typeable FunType t where
+  pwitSym Fun_t (a :* (b :* Nil))
+    = do { Data.Constraint.Dict <- pwit
+                                     (Typeable.Proxy :: Typeable.Proxy Typeable.Typeable)
+                                     (TypeRep a);
+           Data.Constraint.Dict <- pwit
+                                     (Typeable.Proxy :: Typeable.Proxy Typeable.Typeable)
+                                     (TypeRep b);
+           return Data.Constraint.Dict }
 
-deriveWitness ''Eq ''BoolType
-deriveWitness ''Eq ''CharType
-deriveWitness ''Eq ''IntType
-deriveWitness ''Eq ''FloatType
-deriveWitness ''Eq ''DoubleType
-deriveWitness ''Eq ''ListType
+instance Witness Eq BoolType t where
+  witSym Bool_t Nil = Data.Constraint.Dict
+instance Witness Eq CharType t where
+  witSym Char_t Nil = Data.Constraint.Dict
+instance Witness Eq IntType t where
+  witSym Int_t Nil = Data.Constraint.Dict
+instance Witness Eq FloatType t where
+  witSym Float_t Nil = Data.Constraint.Dict
+instance Witness Eq DoubleType t where
+  witSym Double_t Nil = Data.Constraint.Dict
+instance Witness Eq t t => Witness Eq ListType t where
+  witSym List_t (a :* Nil)
+    = case wit (Typeable.Proxy :: Typeable.Proxy Eq) (TypeRep a) of {
+        Data.Constraint.Dict -> Data.Constraint.Dict }
 
-derivePWitness ''Eq ''BoolType
-derivePWitness ''Eq ''CharType
-derivePWitness ''Eq ''IntType
-derivePWitness ''Eq ''FloatType
-derivePWitness ''Eq ''DoubleType
-derivePWitness ''Eq ''ListType
+instance PWitness Eq BoolType t where
+  pwitSym Bool_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Eq CharType t where
+  pwitSym Char_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Eq IntType t where
+  pwitSym Int_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Eq FloatType t where
+  pwitSym Float_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Eq DoubleType t where
+  pwitSym Double_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Eq t t => PWitness Eq ListType t where
+  pwitSym List_t (a :* Nil)
+    = do { Data.Constraint.Dict <- pwit
+                                     (Typeable.Proxy :: Typeable.Proxy Eq) (TypeRep a);
+           return Data.Constraint.Dict }
 
-deriveWitness ''Ord ''BoolType
-deriveWitness ''Ord ''CharType
-deriveWitness ''Ord ''IntType
-deriveWitness ''Ord ''FloatType
-deriveWitness ''Ord ''DoubleType
-deriveWitness ''Ord ''ListType
+instance Witness Ord BoolType t where
+  witSym Bool_t Nil = Data.Constraint.Dict
+instance Witness Ord CharType t where
+  witSym Char_t Nil = Data.Constraint.Dict
+instance Witness Ord IntType t where
+  witSym Int_t Nil = Data.Constraint.Dict
+instance Witness Ord FloatType t where
+  witSym Float_t Nil = Data.Constraint.Dict
+instance Witness Ord DoubleType t where
+  witSym Double_t Nil = Data.Constraint.Dict
+instance Witness Ord t t => Witness Ord ListType t where
+  witSym List_t (a :* Nil)
+    = case wit (Typeable.Proxy :: Typeable.Proxy Ord) (TypeRep a) of {
+        Data.Constraint.Dict -> Data.Constraint.Dict }
 
-derivePWitness ''Ord ''BoolType
-derivePWitness ''Ord ''CharType
-derivePWitness ''Ord ''IntType
-derivePWitness ''Ord ''FloatType
-derivePWitness ''Ord ''DoubleType
-derivePWitness ''Ord ''ListType
+instance PWitness Ord BoolType t where
+  pwitSym Bool_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Ord CharType t where
+  pwitSym Char_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Ord IntType t where
+  pwitSym Int_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Ord FloatType t where
+  pwitSym Float_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Ord DoubleType t where
+  pwitSym Double_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Ord t t => PWitness Ord ListType t where
+  pwitSym List_t (a :* Nil)
+    = do { Data.Constraint.Dict <- pwit
+                                     (Typeable.Proxy :: Typeable.Proxy Ord) (TypeRep a);
+           return Data.Constraint.Dict }
 
-deriveWitness ''Show ''BoolType
-deriveWitness ''Show ''CharType
-deriveWitness ''Show ''IntType
-deriveWitness ''Show ''FloatType
-deriveWitness ''Show ''DoubleType
-deriveWitness ''Show ''ListType
+instance Witness Show BoolType t where
+  witSym Bool_t Nil = Data.Constraint.Dict
+instance Witness Show CharType t where
+  witSym Char_t Nil = Data.Constraint.Dict
+instance Witness Show IntType t where
+  witSym Int_t Nil = Data.Constraint.Dict
+instance Witness Show FloatType t where
+  witSym Float_t Nil = Data.Constraint.Dict
+instance Witness Show DoubleType t where
+  witSym Double_t Nil = Data.Constraint.Dict
+instance Witness Show t t => Witness Show ListType t where
+  witSym List_t (a :* Nil)
+    = case wit (Typeable.Proxy :: Typeable.Proxy Show) (TypeRep a) of {
+        Data.Constraint.Dict -> Data.Constraint.Dict }
 
-derivePWitness ''Show ''BoolType
-derivePWitness ''Show ''CharType
-derivePWitness ''Show ''IntType
-derivePWitness ''Show ''FloatType
-derivePWitness ''Show ''DoubleType
-derivePWitness ''Show ''ListType
+instance PWitness Show BoolType t where
+  pwitSym Bool_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Show CharType t where
+  pwitSym Char_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Show IntType t where
+  pwitSym Int_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Show FloatType t where
+  pwitSym Float_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Show DoubleType t where
+  pwitSym Double_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Show t t => PWitness Show ListType t where
+  pwitSym List_t (a :* Nil)
+    = do { Data.Constraint.Dict <- pwit
+                                     (Typeable.Proxy :: Typeable.Proxy Show) (TypeRep a);
+           return Data.Constraint.Dict }
 
-deriveWitness ''Num ''IntType
-deriveWitness ''Num ''FloatType
-deriveWitness ''Num ''DoubleType
+instance Witness Num IntType t where
+  witSym Int_t Nil = Data.Constraint.Dict
+instance Witness Num FloatType t where
+  witSym Float_t Nil = Data.Constraint.Dict
+instance Witness Num DoubleType t where
+  witSym Double_t Nil = Data.Constraint.Dict
 
-derivePWitness ''Num ''IntType
-derivePWitness ''Num ''FloatType
-derivePWitness ''Num ''DoubleType
+instance PWitness Num IntType t where
+  pwitSym Int_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Num FloatType t where
+  pwitSym Float_t Nil = do { return Data.Constraint.Dict }
+instance PWitness Num DoubleType t where
+  pwitSym Double_t Nil = do { return Data.Constraint.Dict }
 
-deriveWitness ''Integral ''IntType
+instance Witness Integral IntType t where
+  witSym Int_t Nil = Data.Constraint.Dict
 
-derivePWitness ''Integral ''IntType
+instance PWitness Integral IntType t where
+  pwitSym Int_t Nil = do { return Data.Constraint.Dict }
 
 -- 'PWitness' instances for non-members
 
@@ -205,5 +338,3 @@ instance PWitness Integral FloatType  t
 instance PWitness Integral DoubleType t
 instance PWitness Integral ListType   t
 instance PWitness Integral FunType    t
-
-#endif
